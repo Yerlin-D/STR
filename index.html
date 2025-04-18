@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitor de Signos Vitales</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 2rem; }
+    h1 { color: #444; }
+    .alerta { color: red; font-weight: bold; }
+    .normal { color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Monitor de Signos Vitales</h1>
+  <p id="estado">Esperando datos...</p>
+  <ul>
+    <li><strong>Ritmo Cardíaco:</strong> <span id="rc">--</span> bpm</li>
+    <li><strong>Temperatura:</strong> <span id="temp">--</span> °C</li>
+    <li><strong>Tensión Arterial:</strong> <span id="ta">--</span></li>
+  </ul>
+
+  <script>
+    const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+
+    ws.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      if (data.error) {
+        document.getElementById("estado").textContent = "Error: " + data.error;
+        return;
+      }
+
+      document.getElementById("rc").textContent = data.ritmo_cardiaco;
+      document.getElementById("temp").textContent = data.temperatura;
+      document.getElementById("ta").textContent = data.tension_arterial;
+
+      const estado = document.getElementById("estado");
+      estado.textContent = data.estado.toUpperCase();
+      estado.className = data.estado === "alerta" ? "alerta" : "normal";
+    };
+
+    ws.onclose = function() {
+      document.getElementById("estado").textContent = "Conexión cerrada con el servidor.";
+    };
+  </script>
+</body>
+</html>
